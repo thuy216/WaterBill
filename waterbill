@@ -1,0 +1,332 @@
+//login
+namespace WaterBill
+{
+    public partial class Form1 : Form
+    {
+        List<Account> Listaccount = ListAccount.Instance.Listaccount1;
+
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void btnExit_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void btnLogin_Click(object sender, EventArgs e)
+        {
+            if (TestLogin(txbUser.Text, txbPass.Text))
+            {
+                WaterBill f = new WaterBill();
+                f.Show();
+                this.Hide();
+                MessageBox.Show("Successful login!");
+                f.LogOut += F_LogOut;
+            }
+            else
+            {
+                MessageBox.Show("Invalid username or password", "Error!", MessageBoxButtons.OK );
+                txbUser.Focus();
+            }
+        }
+
+        private void F_LogOut(object? sender, EventArgs e)
+        {
+            (sender as WaterBill).isExit = false;
+            (sender as WaterBill).Close();
+            this.Show();
+        }
+
+        bool TestLogin(string username, string password)
+        {
+            for(int i = 0; i < Listaccount.Count; i++)
+            {
+                if (username == Listaccount[i].Username && password == Listaccount[i].Password)
+                    return true;
+            }
+            return false;
+        }
+    }
+}
+
+
+
+// acount
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace WaterBill
+{
+    public class ListAccount
+    {
+        private static ListAccount instance;
+        public static ListAccount Instance 
+        { get
+            {
+                if(instance == null)
+                    instance = new ListAccount();
+                return instance;
+            }
+            
+          set => instance = value; 
+        }
+
+        List<Account> Listaccount;
+        public List<Account> Listaccount1
+        { 
+            get => Listaccount; 
+            set => Listaccount = value; 
+        }
+
+
+        public static int Count { get; internal set; }
+        
+
+        ListAccount()
+        {
+            Listaccount1 = new List<Account>();
+            Listaccount1.Add(new Account("thuy", "123"));
+            Listaccount1.Add(new Account("admin", "admin"));
+            Listaccount1.Add(new Account("levantruongson", "123"));
+            Listaccount1.Add(new Account("phamhainam", "123"));
+            Listaccount1.Add(new Account("nguyenquoctuan", "123"));
+        }
+    }
+}
+
+
+//waterbill
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using ComboBox = System.Windows.Forms.ComboBox;
+
+namespace WaterBill
+{
+    public partial class WaterBill : Form
+    {
+
+        public WaterBill()
+        {
+            InitializeComponent();
+        }
+        // Log Out
+        public bool isExit = true;
+        public event EventHandler LogOut;
+        private void btnLogOut_Click(object sender, EventArgs e)
+        {
+            LogOut(this, new EventArgs());
+        }
+        //Click Exit
+        private void btnExit2_Click(object sender, EventArgs e)
+        {
+            if (isExit)
+                Application.Exit();
+        }
+
+
+        //Exit
+        private void WaterBill_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (isExit)
+            {
+                if (MessageBox.Show("Do you want to exit?", "Warning", MessageBoxButtons.YesNo) != DialogResult.Yes)
+                    e.Cancel = true;
+            }
+        }
+        //Water Bill
+
+        private void WaterBill_Load(object sender, EventArgs e)
+        {
+            listView1.FullRowSelect = true;
+        }
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (listView1.SelectedItems.Count > 0)
+            {
+                ListViewItem item = listView1.SelectedItems[0];
+
+
+                string Name = item.SubItems[0].Text;
+                string Customer = item.SubItems[1].Text;
+                string Last = item.SubItems[2].Text;
+                string This = item.SubItems[3].Text;
+                string VATEn = item.SubItems[4].Text;
+                string Consumtion = item.SubItems[5].Text;
+                string WaterBill = item.SubItems[6].Text;
+
+                //
+                txbName.Text = Name;
+                cbCustomer.Text = Customer;
+                txbLast.Text = Last;
+                txbThis.Text = This;
+            }
+        }
+
+        private void cbCustomer_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void cbCustomer_SelectedValueChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            string Name = txbName.Text;
+            string Customer = cbCustomer.Text;
+            int Last = int.Parse(txbLast.Text);
+            int This = int.Parse(txbThis.Text);
+            double VAT = 0;
+            double VATEn = 0;
+            int Consumption = 0;
+            double Total = 0;
+            double WaterFees = 0;
+
+
+            ListViewItem item1 = new ListViewItem(Name);
+
+
+            if (This > Last)
+            {
+                Consumption = (This - Last);
+
+
+                if (cbCustomer.SelectedIndex == 0)
+                {
+                    if (Consumption > 0 && Consumption <= 10)
+                    {
+                        WaterFees = (Consumption * 5973);
+                    }
+                    else if (Consumption > 10 && Consumption <= 20)
+                    {
+                        WaterFees = (10 * 5973) + ((Consumption - 10) * 7052);
+                    }
+                    else if (Consumption > 20 && Consumption <= 30)
+                        WaterFees = (10 * 5973) + (10 * 7052) + ((Consumption - 20) * 8699);
+                    else
+                        WaterFees = (10 * 5973) + (10 * 7052) + (10 * 8699) + (Consumption - 30) * 15929;
+                }
+                else if (cbCustomer.SelectedIndex == 1)
+                {
+                    WaterFees = (Consumption * 9955);
+                }
+                else if (cbCustomer.SelectedIndex == 2)
+                {
+                    WaterFees = (Consumption * 11615);
+                }
+                else
+                {
+                    WaterFees = (Consumption * 22068);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Invalid Data ", "Error!", MessageBoxButtons.OK);
+            }
+
+            
+
+
+            VAT = WaterFees / 10;
+            VATEn = VAT * 2;
+            item1.SubItems.Add(VATEn.ToString());
+
+            item1.SubItems.Add(Consumption.ToString());
+
+            Total = WaterFees + VATEn;
+            item1.SubItems.Add(Total.ToString());
+
+
+            //Add data to ListView
+            listView1.Items.Add(item1); 
+
+            item1.Text = Name;
+            item1.SubItems.Add(Customer);
+            item1.SubItems.Add(Last.ToString());
+            item1.SubItems.Add(This.ToString());
+
+
+            txbLast.Text = null;
+            txbThis.Text = null;
+            txbName.Text = null;
+            cbCustomer.SelectedIndex = -1;
+            txbName.Focus();
+        }
+        private void btnTotal_Click(object sender, EventArgs e)
+        {
+            string Name = txbName.Text;
+            int Last = int.Parse(txbLast.Text);
+            int This = int.Parse(txbThis.Text);
+            string Customer = cbCustomer.Text;
+            double VAT = 0;
+            double VATEn = 0;
+            int Consumption = 0;
+            double Total = 0;
+            double WaterFees = 0;
+
+            if (This > Last)
+            {
+                Consumption = (This - Last);
+
+
+                if (cbCustomer.SelectedIndex == 0)
+                {
+                    if (Consumption > 0 && Consumption <= 10)
+                    {
+                        WaterFees = (Consumption * 5973);
+                    }
+                    else if (Consumption > 10 && Consumption <= 20)
+                    {
+                        WaterFees = (10 * 5973) + ((Consumption - 10) * 7052);
+                    }
+                    else if (Consumption > 20 && Consumption <= 30)
+                        WaterFees = (10 * 5973) + (10 * 7052) + ((Consumption - 20) * 8699);
+                    else
+                        WaterFees = (10 * 5973) + (10 * 7052) + (10 * 8699) + (Consumption - 30) * 15929;
+                }
+                else if (cbCustomer.SelectedIndex == 1)
+                {
+                    WaterFees = (Consumption * 9955);
+                }
+                else if (cbCustomer.SelectedIndex == 2)
+                {
+                    WaterFees = (Consumption * 11615);
+                }
+                else
+                {
+                    WaterFees = (Consumption * 22068);
+                }
+            }
+            VAT = WaterFees / 10;
+            VATEn = VAT * 2;
+
+            Total = WaterFees + VATEn;
+
+
+            DialogResult name = MessageBox.Show("Name: " + Name +
+                "\nLast month's water meter: " + Last +
+                "\nLast month's water meter:" + This +
+                "\nConsumption: " + Consumption +
+                "\nVAT + Environment: " + VATEn +
+                "\nTotal: " + Total, "Water Bill");
+        }
+
+    }
+}
+
